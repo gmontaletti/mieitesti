@@ -30,13 +30,18 @@ return(articoli)
 
 
 leggi_pagine <- function(x) {
-  miapag <- read_html(x)
-}
 
-elabora_pagine <- function(x) {
+  miapag <- read_html(x)
+
   textlinks <- miapag |>
     html_nodes("a") |>
     html_text()
+
+  mylinks <- miapag |>
+    html_nodes("a") |>
+    html_attr("href")
+
+  links <- data.frame(testo = textlinks, link = mylinks)
 
   textlinks <- textlinks[which(nchar(textlinks) >=  1)]
 
@@ -78,7 +83,7 @@ autlink <- "https://www.ilsussidiario.net/autori/giampaolo-montaletti/"
 articoli <- sussidiario(autore = autlink)
 mieitesti <- lapply(articoli, leggi_pagine)
 
-saveRDS()
+saveRDS(mieitesti, "data/mieitesti.rds")
 
 
 
