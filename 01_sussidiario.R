@@ -1,5 +1,4 @@
 library(rvest)
-library(parallel)
 
 #  funzioni ----
 lista_pagine <- function(x = autlink) {

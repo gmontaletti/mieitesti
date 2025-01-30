@@ -1,12 +1,12 @@
 # librerie ----
 library(data.table)
-library(tm)
-library(lubridate)
-library(magrittr)
-library(stopwords)
-library(wordcloud)
-library(wordcloud2)
-library(ggplot2)
+# library(tm)
+# library(lubridate)
+# library(magrittr)
+# library(stopwords)
+# library(wordcloud)
+# library(wordcloud2)
+# library(ggplot2)
 library(quanteda)
 
 
@@ -33,7 +33,12 @@ delista <- function(x) {
 
 text <-  sapply(testi, delista)
 
-  text <- tolower(text)
+text <- tolower(text)
+
+docs <- tm::Corpus(tm::VectorSource(text))
+
+mdoc <- corpus(docs)
+
 
 miestop <- c("’"
              , "dati"
@@ -44,8 +49,11 @@ miestop <- c("’"
              , "tratta"
              )
 
-  docs <- Corpus(VectorSource(text))
 
+
+  summary(mdoc)
+
+  summary(docs)
 
   docs <- docs %>%
     tm_map(content_transformer(tolower)) %>%
