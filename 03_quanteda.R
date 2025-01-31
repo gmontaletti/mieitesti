@@ -30,5 +30,8 @@ with(tokeninfo, plot(data, Tokens, type = "b", pch = 19, cex = .7))
 tokeninfo[which.max(tokeninfo$Tokens), ]
 
 
+<<<<<<< HEAD
 # explore
+=======
+>>>>>>> refs/remotes/origin/master
 
