@@ -1,4 +1,5 @@
 # librerie ----
+# install("quanteda")
 library(data.table)
 # library(tm)
 # library(lubridate)
