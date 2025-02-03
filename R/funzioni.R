@@ -26,7 +26,7 @@ sussidiario <- function(autore = autlink) {
 }
 
 miostring <- function (x, width = NULL, ...) {
-  string <- paste(x, collapse = " \n ")
+  string <- paste(x, collapse = " ")
   if (missing(width) || is.null(width) || width == 0)
     return(string)
   if (width < 0)
