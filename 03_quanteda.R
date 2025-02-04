@@ -1,14 +1,17 @@
-# renv::install("seededlda")
+# renv::install("unDocUMeantIt/sylly.it")
+# renv::install("unDocUMeantIt/koRpus.lang.it")
+# renv::install("spacyr")
 library(renv)
-library(ggplot2)
 renv::status()
 renv::snapshot()
 # renv::init()
+library(ggplot2)
 library(quanteda)
 require(quanteda.textstats)
 require(quanteda.textplots)
 require(quanteda.corpora)
 # require(quanteda.dictionaries)
+require(spacyr)
 require(seededlda)
 require(lubridate)
 
@@ -19,7 +22,8 @@ apostrofo <- function (x) {
   stringr::str_replace_all(x, "[\'’](?!\\s)", "' ")
 }
 
-# genera corpus da lista ----
+# corpus ----
+### genera df da lista ----
 
 mieitesti <- readRDS("data/mieitesti.rds")
 df <- data.frame(matrix(unlist(mieitesti), nrow=length(mieitesti), byrow=TRUE))
@@ -34,7 +38,7 @@ df$titolo <- apostrofo(df$titolo)
 df$testo <- tolower(df$testo)
 df$titolo <- tolower(df$titolo)
 
-
+### corpus da df ----
 mioc <- corpus(df
                , docid_field = "codice"
                , text_field = tolower("testo")
@@ -72,6 +76,26 @@ ndoc(corp_sent_long)
 
 
 #  tokens -----
+
+## lemmizzazione ----
+
+mioc <- corpus(df
+               , docid_field = "codice"
+               , text_field = "testo"
+               , list("data", "titolo"))
+
+# segmentazione
+mioc.seg <- corpus_reshape(mioc, to = "sentences")
+
+# tokenizzazione
+tok.mioc.seg <- mioc.seg %>%
+  tokens(remove_punct = T,
+         remove_symbols = T,
+         remove_numbers = T)
+
+
+
+## stopwors ----
 stopwords::stopwords_getsources()
 
 miestop <- unique(
@@ -100,7 +124,7 @@ miestop <- unique(
 )
 
 stok <- tokens(mioc)
-mia_div <- textstat_lexdiv(toks)
+mia_div <- textstat_lexdiv(stok)
 plot(mia_div$TTR, type = "l", col = "blue", lwd = 2, xlab = "Documenti", ylab = "TTR")
 
 # cluster ----
@@ -176,13 +200,16 @@ tmod_lda <- textmodel_lda(dfmat_news, k = 5)
 
 terms(tmod_lda, 9)
 
-download.file("https://raw.githubusercontent.com/koheiw/seededlda/refs/heads/master/vignettes/pkgdown/dictionary.yml"
-              , destfile = "dictionary.yml")
+# download.file("https://raw.githubusercontent.com/koheiw/seededlda/refs/heads/master/vignettes/pkgdown/dictionary.yml"
+#               , destfile = "dictionary.yml")
 
-dict_topic <- dictionary(file = "dictionary.yml")
+dict_topic <- dictionary(file = "emp_dictionary.yml")
 print(dict_topic)
 
 tmod_slda <- textmodel_seededlda(dfmat_news, dictionary = dict_topic)
+
+tmod_slda
+terms(tmod_slda, 10)
 
 
 

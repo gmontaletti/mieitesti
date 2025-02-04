@@ -1,0 +1,5 @@
+match: [mercat*, denaro, banc*, stock*, industr*, impres*, pil, salar*, pover*]
+politica: [sindacat*, parlament*, govern*, partit*, parlamentar*, politic*, legislator*, region*]
+pal: [formazio*, programm*, garanz*, cpi, agenz*, support*, gol, orinetament*]
+offerta: [occupa*, disoccupa*, inattiv*, classe et*, forze, lavor*, ricerca lavor*, offer*]
+domanda: [competenz*, skil*, bisogn*, domand*, settor*, impres*, dator*]
