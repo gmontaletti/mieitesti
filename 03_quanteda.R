@@ -13,7 +13,7 @@ require(quanteda.textstats)
 require(quanteda.textplots)
 require(quanteda.corpora)
 # require(quanteda.dictionaries)
-require(spacyr)
+# require(spacyr)
 require(seededlda)
 require(lubridate)
 require(tidyverse)
@@ -29,7 +29,8 @@ apostrofo <- function (x) {
 
 # spacy_install()
 # spacy_download_langmodel("it_core_news_sm")
-spacy_initialize(model = "it_core_news_sm")
+# spacy_initialize(model = "it_core_news_sm")
+
 
 
 # corpus ----
@@ -54,7 +55,7 @@ mioc <- corpus(df
                , text_field = "testo"
                , list("data", "titolo"))
 
-mioc
+mioc |> summary()
 #  statistiche corpus ----
 
 textstat_summary(mioc) %>%
@@ -80,8 +81,10 @@ ndoc(mioc)
 corp_sent <- corpus_reshape(mioc, to = "sentences")
 print(corp_sent)
 ndoc(corp_sent)
+corp_sent |> summary()
 
-corp_sent_long <- corpus_subset(corp_sent, ntoken(corp_sent) >= 20)
+
+corp_sent_long <- corpus_subset(corp_sent, ntoken(corp_sent) >= 50)
 ndoc(corp_sent_long)
 
 
@@ -94,33 +97,33 @@ mio <- corpus(df
                , text_field = "testo"
                , list("data", "titolo"))
 
-spacy.mio.toks <- mio %>%
-  # segmentazione
-  corpus() %>%
-  corpus_reshape("sentences") %>%
-  spacy_tokenize(remove_punct = T,
-                 remove_numbers = T,
-                 remove_symbols = T) %>%
-  as.tokens()
-
-spacy.mio.toks %>% summary() %>% head()
-
-mio.pos <- mio %>%
-  corpus() %>%
-  corpus_reshape(to = "sentences") %>%
-  spacy_parse()
-
-class(mio.pos)
+# spacy.mio.toks <- mio %>%
+#   # segmentazione
+#   corpus() %>%
+#   corpus_reshape("sentences") %>%
+#   spacy_tokenize(remove_punct = T,
+#                  remove_numbers = T,
+#                  remove_symbols = T) %>%
+#   as.tokens()
+#
+# spacy.mio.toks %>% summary() %>% head()
+#
+# mio.pos <- mio %>%
+#   corpus() %>%
+#   corpus_reshape(to = "sentences") %>%
+#   spacy_parse()
+#
+# class(mio.pos)
 
 # mio.pos <- as.data.frame(mio.pos)
-names(mio.pos)
+# names(mio.pos)
 
-mio.lem <- mio.pos %>%
-  filter(pos != "PUNCT" ) %>%
-  as.tokens(use_lemma=T)
+# mio.lem <- mio.pos %>%
+#   filter(pos != "PUNCT" ) %>%
+#   as.tokens(use_lemma=T)
 
 # segmentazione
-mioc.seg <- corpus_reshape(mioc, to = "sentences")
+mioc.seg <- corpus_reshape(mio, to = "sentences")
 
 # tokenizzazione
 tok.mioc.seg <- mioc.seg %>%
@@ -149,13 +152,16 @@ tagged.sep <- treetag(
 
 head(tagged.sep@tokens)
 
-types(tagged.sep) %>%
+types(tagged.sep) %>% head()
 
 ttmio <- taggedText(tagged.sep)
+length(unique(tagged.sep@tokens$sntc))
+
 setDT(ttmio)
 ttmio[, .N, wclass]
+ttmio <- ttmio[wclass %in% c("noun", "verb", "adverb", "name", "adjective")]
 
-length(unique(tagged.sep@tokens$sntc))
+as.tokens(ttmio)
 
 
 ## stopwors ----
