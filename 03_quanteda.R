@@ -1,6 +1,8 @@
 # renv::install("unDocUMeantIt/sylly.it")
 # renv::install("unDocUMeantIt/koRpus.lang.it")
 # renv::install("spacyr")
+# renv::install("tidyverse")
+
 library(renv)
 renv::status()
 renv::snapshot()
@@ -14,6 +16,9 @@ require(quanteda.corpora)
 require(spacyr)
 require(seededlda)
 require(lubridate)
+require(tidyverse)
+require(data.table)
+
 
 Sys.setlocale(category = "LC_ALL", locale = "it_IT.UTF-8")
 quanteda_options(language_stemmer ="italian")
@@ -21,6 +26,11 @@ quanteda_options(language_stemmer ="italian")
 apostrofo <- function (x) {
   stringr::str_replace_all(x, "[\'’](?!\\s)", "' ")
 }
+
+# spacy_install()
+# spacy_download_langmodel("it_core_news_sm")
+spacy_initialize(model = "it_core_news_sm")
+
 
 # corpus ----
 ### genera df da lista ----
@@ -35,13 +45,13 @@ df <- df[df$data >= as.Date("2021-01-10"), ]
 df$codice <- make.names(paste(substring(df$titolo, 1, 11), df$data))
 df$testo <- apostrofo(df$testo)
 df$titolo <- apostrofo(df$titolo)
-df$testo <- tolower(df$testo)
-df$titolo <- tolower(df$titolo)
+# df$testo <- tolower(df$testo)
+# df$titolo <- tolower(df$titolo)
 
 ### corpus da df ----
 mioc <- corpus(df
                , docid_field = "codice"
-               , text_field = tolower("testo")
+               , text_field = "testo"
                , list("data", "titolo"))
 
 mioc
@@ -77,12 +87,37 @@ ndoc(corp_sent_long)
 
 #  tokens -----
 
-## lemmizzazione ----
+## stacyr lemmizzazione ----
 
-mioc <- corpus(df
+mio <- corpus(df
                , docid_field = "codice"
                , text_field = "testo"
                , list("data", "titolo"))
+
+spacy.mio.toks <- mio %>%
+  # segmentazione
+  corpus() %>%
+  corpus_reshape("sentences") %>%
+  spacy_tokenize(remove_punct = T,
+                 remove_numbers = T,
+                 remove_symbols = T) %>%
+  as.tokens()
+
+spacy.mio.toks %>% summary() %>% head()
+
+mio.pos <- mio %>%
+  corpus() %>%
+  corpus_reshape(to = "sentences") %>%
+  spacy_parse()
+
+class(mio.pos)
+
+# mio.pos <- as.data.frame(mio.pos)
+names(mio.pos)
+
+mio.lem <- mio.pos %>%
+  filter(pos != "PUNCT" ) %>%
+  as.tokens(use_lemma=T)
 
 # segmentazione
 mioc.seg <- corpus_reshape(mioc, to = "sentences")
@@ -93,6 +128,34 @@ tok.mioc.seg <- mioc.seg %>%
          remove_symbols = T,
          remove_numbers = T)
 
+# koRpus lemmizzazione  -----
+
+detach("package:seededlda")
+detach("package:quanteda")
+library(koRpus.lang.it)
+
+tagged.sep <- treetag(
+  df$testo,
+  format = "obj",                 # oggetto interno, e non file esterno
+  lang="it",
+  doc_id = "mio",                 # identificativo
+  sentc.end = c(".", "!", "?"),   # confini delle frasi
+  treetagger="manual",            # indicare le successive opzioni
+  TT.options=list(
+    path="/home/monty/tt",         # percorso di sistema
+    preset="it"
+  )
+)
+
+head(tagged.sep@tokens)
+
+types(tagged.sep) %>%
+
+ttmio <- taggedText(tagged.sep)
+setDT(ttmio)
+ttmio[, .N, wclass]
+
+length(unique(tagged.sep@tokens$sntc))
 
 
 ## stopwors ----
@@ -120,10 +183,18 @@ miestop <- unique(
     , "unità"
     , "rapporto"
     , "italia"
+    , "da il"
+    , "su il"
+    , "in il"
+    , "a il"
+    , "di il"
+    , "Stare"
+    , "Vedere"
+    , "Restare"
              )
 )
 
-stok <- tokens(mioc)
+stok <- tokens(mio.lem)
 mia_div <- textstat_lexdiv(stok)
 plot(mia_div$TTR, type = "l", col = "blue", lwd = 2, xlab = "Documenti", ylab = "TTR")
 
@@ -137,7 +208,7 @@ plot(clust, xlab = "Distance", ylab = NULL)
 
 
 #  fcm ----
-toks <- tokens(mioc, remove_punct = TRUE
+toks <- tokens(mio.lem, remove_punct = TRUE
                , remove_numbers = TRUE
                , remove_symbols = TRUE
                , remove_url = TRUE
