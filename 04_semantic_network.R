@@ -95,7 +95,7 @@ toks <- tokens(tok, remove_punct = TRUE
                , padding = TRUE
                , include_docvars = TRUE)
 
-toks <- tok |>
+toks <- toks |>
   tokens_remove(pattern = miestop, padding = TRUE)
 
 fcmat <- fcm(toks, context = "window", tri = FALSE)
