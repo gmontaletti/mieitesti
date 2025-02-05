@@ -1,7 +1,8 @@
 # renv::install("unDocUMeantIt/sylly.it")
 # renv::install("unDocUMeantIt/koRpus.lang.it")
 # renv::install("spacyr")
-# renv::install("tidyverse")
+# renv::install("tidytext")
+# install("tm.plugin.koRpus")
 
 library(renv)
 renv::status()
@@ -16,7 +17,7 @@ require(quanteda.corpora)
 # require(spacyr)
 require(seededlda)
 require(lubridate)
-require(tidyverse)
+require(tidytext)
 require(data.table)
 
 
@@ -27,63 +28,53 @@ apostrofo <- function (x) {
   stringr::str_replace_all(x, "[\'’](?!\\s)", "' ")
 }
 
-# spacy_install()
-# spacy_download_langmodel("it_core_news_sm")
-# spacy_initialize(model = "it_core_news_sm")
-
-
-
 # corpus ----
 ### genera df da lista ----
 
 mieitesti <- readRDS("data/mieitesti.rds")
 df <- data.frame(matrix(unlist(mieitesti), nrow=length(mieitesti), byrow=TRUE))
-names(df) <- c("data", "titolo", "testo")
+names(df) <- c("data", "titolo", "text")
 
 df$data <- as.Date(as.numeric(df$data))
 df <- df[df$data >= as.Date("2021-01-10"), ]
 
-df$codice <- make.names(paste(substring(df$titolo, 1, 11), df$data))
-df$testo <- apostrofo(df$testo)
+df$doc_id <- make.names(paste(substring(df$titolo, 1, 11), df$data))
+df$text <- apostrofo(df$text)
 df$titolo <- apostrofo(df$titolo)
 # df$testo <- tolower(df$testo)
 # df$titolo <- tolower(df$titolo)
 
 ### corpus da df ----
-mioc <- corpus(df
-               , docid_field = "codice"
-               , text_field = "testo"
+mio <- corpus(df
+               , docid_field = "doc_id"
+               , text_field = "text"
                , list("data", "titolo"))
 
-mioc |> summary()
+mio
+mio |> summary()
 #  statistiche corpus ----
 
-textstat_summary(mioc) %>%
+textstat_summary(mio) %>%
   ggplot(aes(x = document, y = tokens, group = 1)) +
   geom_line(col = palette()[1]) +
   geom_point(col = palette()[2]) +
   scale_x_discrete (labels = NULL) +
   labs(x = "", y = "Tokens")
 
-summary(mioc)
 
 
-mioc
-tokeninfo <- summary(mioc)
-tokeninfo$Year <- docvars(mioc, "data")
+tokeninfo <- summary(mio)
+tokeninfo$Year <- docvars(mio, "data")
 with(tokeninfo, plot(data, Tokens, type = "b", pch = 19, cex = .7))
 
 # longest
 tokeninfo[which.max(tokeninfo$Tokens), ]
 
-# explore quanteda base....
-ndoc(mioc)
-corp_sent <- corpus_reshape(mioc, to = "sentences")
+ndoc(mio)
+corp_sent <- mio |> corpus_reshape(to = "sentences")
 print(corp_sent)
 ndoc(corp_sent)
 corp_sent |> summary()
-
-
 corp_sent_long <- corpus_subset(corp_sent, ntoken(corp_sent) >= 50)
 ndoc(corp_sent_long)
 
@@ -91,11 +82,6 @@ ndoc(corp_sent_long)
 #  tokens -----
 
 ## stacyr lemmizzazione ----
-
-mio <- corpus(df
-               , docid_field = "codice"
-               , text_field = "testo"
-               , list("data", "titolo"))
 
 # spacy.mio.toks <- mio %>%
 #   # segmentazione
@@ -123,159 +109,78 @@ mio <- corpus(df
 #   as.tokens(use_lemma=T)
 
 # segmentazione
-mioc.seg <- corpus_reshape(mio, to = "sentences")
+# mioc.seg <- corpus_reshape(mio, to = "sentences")
 
 # tokenizzazione
-tok.mioc.seg <- mioc.seg %>%
-  tokens(remove_punct = T,
-         remove_symbols = T,
-         remove_numbers = T)
+# tok.mioc.seg <- mioc.seg %>%
+#   tokens(remove_punct = T,
+#          remove_symbols = T,
+#          remove_numbers = T)
 
-# koRpus lemmizzazione  -----
-
-detach("package:seededlda")
-detach("package:quanteda")
-library(koRpus.lang.it)
-
-tagged.sep <- treetag(
-  df$testo,
-  format = "obj",                 # oggetto interno, e non file esterno
-  lang="it",
-  doc_id = "mio",                 # identificativo
-  sentc.end = c(".", "!", "?"),   # confini delle frasi
-  treetagger="manual",            # indicare le successive opzioni
-  TT.options=list(
-    path="/home/monty/tt",         # percorso di sistema
-    preset="it"
-  )
-)
-
-head(tagged.sep@tokens)
-
-types(tagged.sep) %>% head()
-
-ttmio <- taggedText(tagged.sep)
-length(unique(tagged.sep@tokens$sntc))
-
-setDT(ttmio)
-ttmio[, .N, wclass]
-ttmio <- ttmio[wclass %in% c("noun", "verb", "adverb", "name", "adjective")]
-
-as.tokens(ttmio)
+### koRpus lemmizzazione  -----
 
 
-## stopwors ----
-stopwords::stopwords_getsources()
+### lemmi con tm e koRpus ----
 
-miestop <- unique(
-  c(stopwords("it", source = "snowball")
-             , stopwords("it", source = "stopwords-iso")
-    , "circa"
-    , "fra"
-    , "anni"
-    , "mila"
-    , "solo"
-    , "mentre"
-    , "rispetto"
-    , "parte"
-    , "tratta"
-    , "dato"
-    , "dati"
-    , "resta"
-    , "trimestre"
-    , "numero"
-    , "media"
-    , "punti"
-    , "unità"
-    , "rapporto"
-    , "italia"
-    , "da il"
-    , "su il"
-    , "in il"
-    , "a il"
-    , "di il"
-    , "Stare"
-    , "Vedere"
-    , "Restare"
-             )
-)
+# library(tm)
+# library(tm.plugin.koRpus)
+# set.kRp.env(lang="it",
+#             TT.cmd = "manual",
+#             TT.options=list(
+#               path="/home/monty/tt",         # percorso di sistema
+#               preset="it"
+#             ))
+#
+# mioc <- df |> readCorpus(format = "obj")
+#
+# corpusTm(mioc)
+# meta(corpusTm(mioc))
+#
+# head(taggedText(mioc))
+#
+#
+# stok <- tokens(mio.lem)
+# mia_div <- textstat_lexdiv(stok)
+# plot(mia_div$TTR, type = "l", col = "blue", lwd = 2, xlab = "Documenti", ylab = "TTR")
+#
 
-stok <- tokens(mio.lem)
-mia_div <- textstat_lexdiv(stok)
-plot(mia_div$TTR, type = "l", col = "blue", lwd = 2, xlab = "Documenti", ylab = "TTR")
-
-# cluster ----
-dfmat <- dfm(stok)
-dfmat <- dfm_remove(dfmat, miestop)
-
-tstat_dist <- as.dist(textstat_dist(dfmat))
-clust <- hclust(tstat_dist)
-plot(clust, xlab = "Distance", ylab = NULL)
-
-
-#  fcm ----
-toks <- tokens(mio.lem, remove_punct = TRUE
-               , remove_numbers = TRUE
-               , remove_symbols = TRUE
-               , remove_url = TRUE
-               , remove_separators = TRUE
-               # , remove_hyphens = TRUE
-               , split_hyphens = TRUE
-               , padding = TRUE
-               , include_docvars = TRUE)
-
-toks <- toks |>
-  tokens_remove(pattern = miestop, padding = TRUE)
-
-fcmat <- fcm(toks, context = "window", tri = FALSE)
-
-feat <- colSums(fcmat) |>
-  sort(decreasing = TRUE) |>
-  head(30) |>
-  names()
-
-fcm_select(fcmat, pattern = feat) |>
-  textplot_network(min_freq = 1)
+# disattiviamo i pacchetti
 
 # key ness ----
 
 # corp_news <- download("data_corpus_guardian")
 # summary(corp_news)
 
-dfmat_news <- dfm(toks)
+toc <- tokens(mio
+              , remove_punct = T
+              , remove_symbols = T
+              , remove_numbers = T
+              , remove_separators = T
+              ) |>
+  tokens_remove(pattern = miestop, padding = TRUE)
 
-tstat_key <- textstat_keyness(dfmat_news,
-                              target = year(dfmat_news$data) > 2023)
+dfmat <- dfm(toc, remove_padding = TRUE)
+
+tstat_key <- textstat_keyness(dfmat,
+                              target = year(dfmat$data) > 2023)
 textplot_keyness(tstat_key)
 
+# cluster ----
 
-# moods ----
+tstat_dist <- as.dist(textstat_dist(dfmat))
+clust <- hclust(tstat_dist)
+plot(clust, xlab = "Distance", ylab = NULL)
 
-# tokenize corpus
-toks_news <- toks
+# topics classificazione ----
 
-eu <- c("salar*", "contratt*")
-toks_inside <- tokens_keep(toks_news, pattern = eu, window = 10)
-toks_inside <- tokens_remove(toks_inside, pattern = eu) # remove the keywords
-toks_outside <- tokens_remove(toks_news, pattern = eu, window = 10)
-
-dfmat_inside <- dfm(toks_inside)
-dfmat_outside <- dfm(toks_outside)
-
-tstat_key_inside <- textstat_keyness(rbind(dfmat_inside, dfmat_outside),
-                                     target = seq_len(ndoc(dfmat_inside)))
-head(tstat_key_inside, 50)
-
-# topics claasificazione ----
-
-
-dfmat_news <- dfm(toks_news) %>%
+dfmat_news <- dfm(toc) %>%
   dfm_trim(min_termfreq = 0.8, termfreq_type = "quantile",
            max_docfreq = 0.1, docfreq_type = "prop")
 
 tmod_lda <- textmodel_lda(dfmat_news, k = 5)
 
 terms(tmod_lda, 9)
+
 
 # download.file("https://raw.githubusercontent.com/koheiw/seededlda/refs/heads/master/vignettes/pkgdown/dictionary.yml"
 #               , destfile = "dictionary.yml")
@@ -287,30 +192,87 @@ tmod_slda <- textmodel_seededlda(dfmat_news, dictionary = dict_topic)
 
 tmod_slda
 terms(tmod_slda, 10)
+cla_docs <- as.data.frame(topics(tmod_slda))
+
+#  add to corpus
+
+merge(df, topics(topics(tmod_slda)))
+
+
+
+
+#  wordcloud ----
+
+dfmat_wcloud <- corpus_subset(mio, year(data) >=  2022) |>
+  tokens(remove_punct = TRUE) |>
+  tokens_remove(pattern = stopwords('it')) |>
+  dfm() |>
+  dfm_trim(min_termfreq = 30, verbose = FALSE)
+
+set.seed(100)
+textplot_wordcloud(dfmat_wcloud, min_size = 1 , max_size = 10)
+
+
+# lexical dispersion ----
+
+
+toks_corpus_inaugural_subset <-
+  corpus_subset(mio, year(data) >=  2022) |>
+  tokens()
+kwic(toks_corpus_inaugural_subset, pattern = c("salari", "politiche") ) |>
+  textplot_xray()
+kwic(toks_corpus_inaugural_subset, pattern = c("salari", "politiche") ) |>
+  textplot_xray(scale = "absolute")
+kwic(toks_corpus_inaugural_subset, pattern = c("occupazione", "salari", "politiche") ) |>
+  textplot_xray()
+
 
 
 
 # kwic ----
 
-
-options(width = 110)
-
-kw_lavor <- kwic(toks, pattern =  "lavor*")
+kw_lavor <- kwic(toc, pattern =  "lavor*")
 head(kw_lavor, 10)
 
-kw_law2 <- kwic(toks
+kw_law2 <- kwic(toc
                   , pattern = c("lavor*", "disoc*"))
 head(kw_law2, 10)
 
 
-toks <- tokens_select(toks, pattern = stopwords("it", source = "snowball"), selection = "remove")
-collocazione <- textstat_collocations(toks_nostop, size = 2, min_count = 5)
+toks <- tokens_select(toc, pattern = stopwords("it", source = "snowball"), selection = "remove")
+collocazione <- textstat_collocations(toks, size = 2, min_count = 5)
 
-dmat <- dfm(toks, tolower = TRUE, remove_padding = TRUE)
+dmat_c <- dfm(toks, tolower = TRUE, remove_padding = TRUE)
 
-dmat %>% textstat_frequency()
+dmat_c %>% textstat_frequency()
 
 dfcm <- fcm(toks, context = "document", count = "frequency")
 
 dfcm %>% textplot_network(min_freq = 300, edge_alpha = 0.5, edge_color = "grey")
+
+
+#  frequency plot ----
+
+
+# library("quanteda.textstats")
+tstat_freq_inaug <- textstat_frequency(dfmat, n = 50)
+
+ggplot(tstat_freq_inaug, aes(x = frequency, y = reorder(feature, frequency))) +
+  geom_point() +
+  labs(x = "Frequency", y = "Feature")
+
+
+# Create document-level variable with year and president
+# Get frequency grouped by president
+
+freq_grouped <- textstat_frequency(,groups = President)
+
+# Filter the term "american"
+freq_american <- subset(freq_grouped, freq_grouped$feature %in% "american")
+
+ggplot(freq_american, aes(x = frequency, y = group)) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 14), breaks = c(seq(0, 14, 2))) +
+  labs(x = "Frequency", y = NULL,
+       title = 'Frequency of "american"')
 
