@@ -38,7 +38,7 @@ miostring <- function (x, width = NULL, ...) {
   string
 }
 
-leggi_pagine <- function(x) {
+leggi_pagina <- function(x) {
   # esempio x = articoli[10]
   Sys.setlocale(category = "LC_ALL", locale = "it_IT.UTF-8")
 
@@ -98,7 +98,16 @@ leggi_pagine <- function(x) {
   # cat(testo)
   item_link <- x
   esporta <- list(data, titolo, testo, item_link)
-
   return(esporta)
 }
 
+pag_as_frame <- function(lista = mieitesti) {
+  # lista = newndf
+  elementi <-  c("data", "titolo", "text", "item_link")
+  colonne <- length(elementi)
+  # mt <- as.data.frame(matrix(unlist(lista), nrow = length(lista), byrow=TRUE))
+  mt <- data.frame(matrix(unlist(lista), ncol = length(elementi), byrow=F))
+  names(mt) <- elementi
+  setDT(mt)
+
+}
