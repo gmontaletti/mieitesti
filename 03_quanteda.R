@@ -69,6 +69,12 @@ textstat_summary(mio) %>%
 tokeninfo <- summary(mio)
 tokeninfo$Year <- docvars(mio, "data")
 with(tokeninfo, plot(data, Tokens, type = "b", pch = 19, cex = .7))
+with(tokeninfo, plot(data, Types, type = "b", pch = 19, cex = .7))
+
+ggplot(tokeninfo) +
+  geom_line(aes(x = data, y= Tokens), col = "red") +
+  geom_line(aes(x = data, y= Types), col = "green") +
+  theme_minimal()
 
 # longest
 tokeninfo[which.max(tokeninfo$Tokens), ]
@@ -85,6 +91,8 @@ toc <- tokens(mio
               , remove_separators = T
 ) |>
   tokens_remove(pattern = miestop, padding = TRUE)
+
+types(toc) |> length()
 
 # topics classificazione ----
 
@@ -247,6 +255,7 @@ plotta_mensile("sussidi")
 #  altri textmodels ----
 
 ??quanteda.textmodels
+
 seq(-1.5, 1.5, .042) |> length()
 tmod <- textmodel_wordscores(dfmat, y = c(seq(-1.5, 1.5, .042)))
 summary(tmod)

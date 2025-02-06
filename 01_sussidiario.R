@@ -7,8 +7,6 @@ library(tidyRSS)
 #  funzioni ----
 source("R/funzioni.R")
 
-df = tidyfeed("https://www.ilsussidiario.net/feed/autore/914/giampaolo-montaletti/")
-
 
 #  esegui ----
 autlink <- "https://www.ilsussidiario.net/autori/giampaolo-montaletti/"

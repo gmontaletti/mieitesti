@@ -96,8 +96,8 @@ leggi_pagine <- function(x) {
   testi  <- testi[-1]
   testo <- miostring(testi)
   # cat(testo)
-
-  esporta <- list(data, titolo, testo)
+  item_link <- x
+  esporta <- list(data, titolo, testo, item_link)
 
   return(esporta)
 }
