@@ -1,3 +1,4 @@
+# renv::install("tidyRSS")
 library(renv)
 library(rvest)
 library(data.table)
@@ -48,6 +49,6 @@ print(paste(
 
 
   }
-sintesi(1) |> knitr::kable()
+sintesi(5) |> knitr::kable()
 
 

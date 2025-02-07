@@ -20,4 +20,4 @@ newndf <- leggi_pagina(ndf$item_link)
 
 temp <- pag_as_frame(lista = newndf)
 
-mieitesti <- rebind
+mieitesti <- rbindlist(list(mieitesti, temp), fill = T)
