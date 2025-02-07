@@ -8,11 +8,12 @@ library(tidyRSS)
 Sys.setlocale(category = "LC_ALL", locale = "it_IT.UTF-8")
 
 istat_feeds <- c(
-                    "https://www.istat.it/feed"
+                   "https://www.istat.it/feed"
                  , "https://www.istat.it/tema/lavoro-e-retribuzioni/feed"
                  , "https://www.istat.it/documenti/comunicato-stampa/feed"
                  , "https://www.istat.it/documenti/tavole-di-dati/feed"
                  , "https://www.istat.it/documenti/audizioni/feed"
+                 # , "https://www.istat.it/documenti/rapporti/feed"
                  )
 
 
@@ -49,6 +50,6 @@ print(paste(
 
 
   }
-sintesi(5) |> knitr::kable()
+sintesi(1) |> knitr::kable()
 
 
