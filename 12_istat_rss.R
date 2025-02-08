@@ -50,6 +50,8 @@ print(paste(
 
 
   }
+
 sintesi(1) |> knitr::kable()
+
 
 
