@@ -34,9 +34,8 @@ apostrofo <- function (x) {
 # corpus ----
 ### genera df da lista ----
 
-mieitesti <- readRDS("data/mieitesti.rds")
-df <- data.frame(matrix(unlist(mieitesti), nrow=length(mieitesti), byrow=TRUE))
-names(df) <- c("data", "titolo", "text")
+df <- readRDS("data/mieitesti.rds")
+# df <- data.frame(matrix(unlist(mieitesti), nrow=length(mieitesti), byrow=TRUE))
 
 df$data <- as.Date(as.numeric(df$data))
 df <- df[df$data >= as.Date("2021-01-10"), ]
@@ -201,7 +200,7 @@ fcm_select(dfcm, pattern = colSums(dfcm) |>
              sort(decreasing = TRUE) |>
              head(30) |>
              names()) %>%
-  textplot_network(min_freq = 3, edge_alpha = 0.5, edge_color = "grey")
+  textplot_network(min_freq = 2, edge_alpha = 0.7, edge_color = "navy")
 
 
 #  frequency plot ----
