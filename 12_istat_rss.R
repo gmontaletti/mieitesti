@@ -13,7 +13,7 @@ istat_feeds <- c(
                  , "https://www.istat.it/documenti/comunicato-stampa/feed"
                  , "https://www.istat.it/documenti/tavole-di-dati/feed"
                  , "https://www.istat.it/documenti/audizioni/feed"
-                 , "https://www.istat.it/documenti/rapporti/feed"
+                 # , "https://www.istat.it/documenti/rapporti/feed"
                  )
 
 
@@ -51,7 +51,7 @@ print(paste(
 
   }
 
-sintesi(1) |> knitr::kable()
+sintesi(6) |> knitr::kable()
 
 
 
