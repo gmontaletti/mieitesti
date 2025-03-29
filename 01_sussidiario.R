@@ -24,6 +24,7 @@ setDT(mt)
 
 saveRDS(mt, "data/mieitesti.rds")
 
+
 # lavoro <- tidyfeed("https://www.ilsussidiario.net/feed/history/5100/lavoro/")
 # rif_lav <- "https://www.ilsussidiario.net/feed/history/8220/riforma-lavoro/" %>% tidyfeed()
 # form_lav <- "https://www.ilsussidiario.net/feed/history/8217/formazione-lavoro/" %>%  tidyfeed()
