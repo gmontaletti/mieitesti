@@ -3,6 +3,7 @@ library(renv)
 library(rvest)
 library(data.table)
 library(tidyRSS)
+library(lubridate)
 
 #  funzioni ----
 source("R/funzioni.R")
@@ -14,9 +15,6 @@ pagine <- lista_pagine(autlink)
 articoli <- sussidiario(autore = autlink)
 articoli
 mt <-parallel::mclapply(articoli, leggi_pagina)
-
-
-
 #
 mt <- data.frame(matrix(unlist(mt), nrow=length(mt), byrow=TRUE))
 names(mt) <- c("data", "titolo", "text", "item_link")
