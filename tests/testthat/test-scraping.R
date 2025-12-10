@@ -39,3 +39,41 @@ test_that("pag_as_frame creates correct data.table structure", {
   expect_equal(names(result), c("data", "titolo", "text", "item_link"))
   expect_equal(nrow(result), 2)
 })
+
+test_that("pag_as_frame assigns columns correctly (byrow fix)", {
+  mock_list <- list(
+    list("2024-01-01", "Article Title One", "This is the text content", "http://example.com/article1"),
+    list("2024-01-02", "Article Title Two", "More text content here", "http://example.com/article2")
+  )
+
+  result <- pag_as_frame(mock_list)
+
+  # URLs should only be in item_link column
+
+  expect_true(all(grepl("^http", result$item_link)))
+  expect_false(any(grepl("^http", result$titolo)))
+  expect_false(any(grepl("^http", result$text)))
+
+  # Titles should be in titolo column
+ expect_equal(result$titolo[1], "Article Title One")
+  expect_equal(result$titolo[2], "Article Title Two")
+})
+
+test_that("pag_as_frame filters malformed entries", {
+  mock_list <- list(
+    list("2024-01-01", "Title 1", "Text 1", "http://example.com/1"),
+    NULL,
+    list("2024-01-02", "Title 2", "Text 2", "http://example.com/2"),
+    list("incomplete", "only three elements", "missing fourth")
+  )
+
+  result <- pag_as_frame(mock_list)
+
+  expect_equal(nrow(result), 2)
+})
+
+test_that("pag_as_frame returns empty data.table for empty input", {
+  expect_warning(result <- pag_as_frame(list()), "No valid articles")
+  expect_s3_class(result, "data.table")
+  expect_equal(nrow(result), 0)
+})

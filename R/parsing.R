@@ -96,8 +96,21 @@ leggi_pagina <- function(x, author_name = "Giampaolo Montaletti") {
 #' df <- pag_as_frame(mt)
 #' }
 pag_as_frame <- function(lista) {
+  # Filter out NULL or malformed entries (must have exactly 4 elements)
+  lista <- Filter(function(x) !is.null(x) && length(x) == 4, lista)
+
+  if (length(lista) == 0) {
+    warning("No valid articles to process")
+    return(data.table::data.table(
+      data = as.Date(character()),
+      titolo = character(),
+      text = character(),
+      item_link = character()
+    ))
+  }
+
   elementi <- c("data", "titolo", "text", "item_link")
-  mt <- data.frame(matrix(unlist(lista), ncol = length(elementi), byrow = FALSE))
+  mt <- data.frame(matrix(unlist(lista), nrow = length(lista), byrow = TRUE))
   names(mt) <- elementi
   data.table::setDT(mt)
   return(mt)
