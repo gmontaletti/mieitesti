@@ -25,7 +25,6 @@ Imports:
     stringr
 Suggests:
     ggplot2,
-    koRpus.lang.it,
     knitr,
     quanteda,
     quanteda.textplots,
