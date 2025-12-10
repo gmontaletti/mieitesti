@@ -55,6 +55,9 @@ renv/activate.R
 data/*.rds
 data/*.RData
 
+# Text corpus and large data files
+testi/
+
 # macOS
 .DS_Store
 
