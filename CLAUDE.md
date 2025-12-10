@@ -4,58 +4,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Text collection and analysis project for archiving articles from "il sussidiario" (Italian news publication) focused on labor market and employment topics. Author: Giampaolo Montaletti.
+R package for collecting and analyzing Italian news articles from "il sussidiario" and ISTAT RSS feeds. Author: Giampaolo Montaletti.
 
 ## Common Commands
 
 ```bash
-# Activate renv environment (auto-runs via .Rprofile)
-source("renv/activate.R")
+# Install package locally
+R CMD INSTALL .
 
-# Full article collection from scratch
-Rscript 01_sussidiario.R
+# Or via devtools
+Rscript -e "devtools::install()"
 
-# Incremental update via RSS (preferred for updates)
-Rscript 11_update_sussidiario.R
+# Generate documentation (NAMESPACE, man/)
+Rscript -e "devtools::document()"
 
-# Text analysis pipeline
-Rscript 02_wclouds.R      # Word clouds
-Rscript 03_quanteda.R     # Full quanteda analysis
-Rscript 04_semantic_network.R  # Lemmatization (requires TreeTagger)
+# Run tests
+Rscript -e "devtools::test()"
 
-# ISTAT RSS aggregation
-Rscript 12_istat_rss.R
+# Full package check
+Rscript -e "devtools::check()"
+
+# Build package
+R CMD build .
+
+# Regenerate package data
+Rscript data-raw/stopwords.R
+Rscript data-raw/emp_dictionary.R
 ```
 
-## Architecture
+## Package Structure
 
-### Data Flow
 ```
-01_sussidiario.R → data/mieitesti.rds → [02, 03, 04 analysis scripts]
-                                      ↓
-11_update_sussidiario.R ←─────────────┘ (incremental updates)
-                      ↓
-             testi/articoli.md (markdown export)
+R/
+├── mieitesti-package.R  # Package documentation
+├── scraping.R           # sussidiario(), lista_pagine(), colleziona()
+├── parsing.R            # leggi_pagina(), pag_as_frame()
+├── text-utils.R         # apostrofo(), miostring()
+├── istat.R              # sintesi(), istat_feeds()
+└── data.R               # Data documentation (miestop, emp_dictionary)
+
+data/                    # Package data (.rda files)
+data-raw/                # Scripts to generate data
+tests/testthat/          # Unit tests
+vignettes/               # Package vignettes
 ```
 
-### Script Numbering Convention
-- `01-09`: Core data collection
-- `11-19`: Update/maintenance scripts
-- `02-04`: Analysis scripts (word clouds, quanteda, semantic networks)
+## Exported Functions
 
-### Key Files
-- `data/mieitesti.rds`: Main article database (data.table: data, titolo, text, item_link)
-- `R/funzioni.R`: Web scraping utilities (lista_pagine, colleziona, sussidiario, leggi_pagina)
-- `R/stopwords.R`: Italian stopwords configuration
-- `emp_dictionary.yml`: Topic dictionary for seededlda (match, politica, pal, offerta, domanda)
+- `sussidiario(autore)` - Collect all articles from an author
+- `leggi_pagina(x)` - Parse a single article page
+- `pag_as_frame(lista)` - Convert article list to data.table
+- `sintesi(x, istat)` - Extract ISTAT article summaries
+- `istat_feeds()` - Get default ISTAT RSS feed URLs
+- `apostrofo(x)` - Normalize Italian apostrophes
 
-### External Dependencies
-- TreeTagger: Required for `04_semantic_network.R` lemmatization (expects installation at `/home/monty/tt`)
-- spacyr/spaCy: Optional NLP (commented in `03_quanteda.R`)
+## Package Data
+
+- `miestop` - Italian stopwords (685 terms)
+- `emp_dictionary` - Employment topic dictionary for seeded LDA
 
 ## Code Style
 
 - R section comments: `# 1. section name -----`
-- Locale: Italian (it_IT.UTF-8)
-- Data format: data.table for efficiency
-- Dependencies managed via renv
+- roxygen2 documentation for all exported functions
+- testthat for unit tests

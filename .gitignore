@@ -51,9 +51,8 @@ renv/cellar/
 renv/activate.R
 .Rprofile
 
-# Data files (generated)
-data/*.rds
-data/*.RData
+# User data files (not package data)
+data/mieitesti.rds
 
 # Text corpus and large data files
 testi/

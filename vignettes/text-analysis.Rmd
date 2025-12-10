@@ -1,0 +1,134 @@
+---
+title: "Text Analysis with mieitesti"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Text Analysis with mieitesti}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette demonstrates text analysis workflows using the mieitesti package
+with the quanteda ecosystem.
+
+## Setup
+
+```{r setup}
+library(mieitesti)
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(ggplot2)
+```
+
+## 1. Collecting Articles
+
+First, collect articles from il sussidiario:
+```{r collect}
+autlink <- "https://www.ilsussidiario.net/autori/giampaolo-montaletti/"
+articoli <- sussidiario(autore = autlink)
+
+# Parse articles (use parallel for speed)
+mt <- parallel::mclapply(articoli, leggi_pagina)
+df <- pag_as_frame(mt)
+```
+
+## 2. Creating a Corpus
+
+Prepare text and create a quanteda corpus:
+```{r corpus}
+df$data <- as.Date(as.numeric(df$data))
+df$doc_id <- make.names(substring(df$titolo, 1, 20), unique = TRUE)
+
+# Normalize Italian apostrophes
+df$text <- apostrofo(df$text)
+df$titolo <- apostrofo(df$titolo)
+
+# Create corpus
+mio <- corpus(df, docid_field = "doc_id", text_field = "text")
+summary(mio)
+```
+
+## 3. Tokenization
+
+Create tokens with Italian stopwords removed:
+```{r tokens}
+toc <- tokens(mio,
+              remove_punct = TRUE,
+              remove_symbols = TRUE,
+              remove_numbers = TRUE,
+              remove_separators = TRUE) |>
+  tokens_remove(pattern = miestop, padding = TRUE)
+```
+
+## 4. Topic Modeling with Seeded LDA
+
+Use the employment dictionary for topic classification:
+```{r topics}
+library(seededlda)
+
+dfmat <- dfm(toc) |>
+  dfm_trim(min_termfreq = 0.8, termfreq_type = "quantile",
+           max_docfreq = 0.1, docfreq_type = "prop")
+
+# Convert emp_dictionary to quanteda dictionary
+dict_topic <- dictionary(emp_dictionary)
+
+# Run seeded LDA
+tmod_slda <- textmodel_seededlda(dfmat, dictionary = dict_topic)
+terms(tmod_slda, 10)
+
+# Add topics to corpus
+docvars(mio, "gruppo") <- topics(tmod_slda)
+```
+
+## 5. Keyness Analysis
+
+Compare word usage across topics or time periods:
+```{r keyness}
+dfmat <- dfm(toc, remove_padding = TRUE)
+
+# Keyness by topic
+tstat_key <- textstat_keyness(dfmat, target = dfmat$gruppo == "pal")
+textplot_keyness(tstat_key)
+```
+
+## 6. Word Clouds
+
+Generate word clouds for specific topics:
+```{r wordcloud}
+dfmat_wcloud <- corpus_subset(mio, gruppo == "pal") |>
+  tokens(remove_punct = TRUE) |>
+  tokens_remove(pattern = miestop) |>
+  dfm() |>
+  dfm_trim(min_termfreq = 10)
+
+textplot_wordcloud(dfmat_wcloud, min_size = 1, max_size = 10)
+```
+
+## 7. Semantic Networks
+
+Visualize term co-occurrences:
+```{r network}
+toks <- tokens_select(toc, pattern = miestop, selection = "remove")
+dfcm <- fcm(toks, context = "window", count = "frequency")
+
+top_terms <- names(sort(colSums(dfcm), decreasing = TRUE)[1:30])
+fcm_select(dfcm, pattern = top_terms) |>
+  textplot_network(min_freq = 2, edge_alpha = 0.7, edge_color = "navy")
+```
+
+## 8. Keyword in Context (KWIC)
+
+Search for specific terms in context:
+```{r kwic}
+kw_lavor <- kwic(toc, pattern = "lavor*")
+head(kw_lavor, 10)
+```

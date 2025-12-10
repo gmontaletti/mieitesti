@@ -1,0 +1,108 @@
+---
+title: "Working with ISTAT RSS Feeds"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with ISTAT RSS Feeds}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette demonstrates how to collect and analyze data from ISTAT
+(Italian National Institute of Statistics) RSS feeds.
+
+## Setup
+
+```{r setup}
+library(mieitesti)
+library(tidyRSS)
+library(data.table)
+```
+
+## 1. Available ISTAT Feeds
+
+The package provides a helper function to get common ISTAT feed URLs:
+```{r feeds}
+feeds <- istat_feeds()
+print(feeds)
+```
+
+These include:
+- Main ISTAT feed
+- Labor and wages topic feed
+- Press releases
+- Data tables
+- Parliamentary hearings
+
+## 2. Collecting Feed Data
+
+Use tidyRSS to fetch and combine multiple feeds:
+```{r collect}
+istat <- rbindlist(lapply(istat_feeds(), tidyfeed), fill = TRUE) |>
+  unique(by = "item_link")
+
+# Sort by publication date
+istat <- istat[order(-item_pub_date)]
+
+# View latest items
+head(istat[, .(item_pub_date, item_title)])
+```
+
+## 3. Extracting Article Summaries
+
+Use the `sintesi()` function to extract full article content:
+```{r sintesi}
+# Extract summary and documents for the first item
+docs <- sintesi(1, istat)
+
+# The function prints the summary and returns document URLs
+print(docs)
+```
+
+## 4. Downloading Documents
+
+The `sintesi()` function returns URLs of PDF and Excel files:
+```{r download}
+docs <- sintesi(1, istat)
+
+# Download a specific document
+if (length(docs) > 0) {
+  # download.file(docs[1], destfile = basename(docs[1]))
+}
+```
+
+## 5. Filtering by Topic
+
+Filter the feed data for specific topics:
+```{r filter}
+# Find items about employment
+lavoro <- istat[grepl("occupat|lavoro|disoccup", item_title, ignore.case = TRUE)]
+head(lavoro$item_title)
+```
+
+## 6. Integration with Text Analysis
+
+Combine ISTAT data collection with mieitesti text analysis:
+```{r integrate}
+library(quanteda)
+
+# Create corpus from ISTAT descriptions
+istat_corpus <- corpus(istat,
+                       text_field = "item_description",
+                       docid_field = "item_link")
+
+# Tokenize with Italian stopwords
+toks <- tokens(istat_corpus, remove_punct = TRUE) |>
+  tokens_remove(miestop)
+
+# Analyze frequency
+dfmat <- dfm(toks)
+topfeatures(dfmat, 20)
+```

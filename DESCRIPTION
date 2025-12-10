@@ -1,0 +1,39 @@
+Package: mieitesti
+Title: Italian News Article Collection and Text Analysis Tools
+Version: 0.1.0
+Authors@R:
+    person("Giampaolo", "Montaletti",
+           email = "giampaolo.montaletti@gmail.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0002-5327-1122"))
+Description: Tools for collecting and analyzing Italian news articles from
+    'il sussidiario' and ISTAT RSS feeds. Provides functions for web scraping,
+    text parsing, and includes Italian stopwords for text analysis.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+URL: https://github.com/gmontaletti/mieitesti
+BugReports: https://github.com/gmontaletti/mieitesti/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    data.table,
+    lubridate,
+    rvest,
+    stringr
+Suggests:
+    ggplot2,
+    koRpus.lang.it,
+    knitr,
+    quanteda,
+    quanteda.textplots,
+    quanteda.textstats,
+    rmarkdown,
+    seededlda,
+    stopwords,
+    testthat (>= 3.0.0),
+    tidyRSS
+Config/testthat/edition: 3
+VignetteBuilder: knitr

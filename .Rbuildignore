@@ -1,0 +1,14 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^\.github$
+^renv$
+^renv\.lock$
+^\.Rprofile$
+^data-raw$
+^\.claude$
+^testi$
+^CLAUDE\.md$
+^\d+_.*\.R$
+^mieitesti\.Rproj$
